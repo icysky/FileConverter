@@ -1,5 +1,17 @@
 # File Converter
 
+## About this fork
+
+This repository is a fork of [Tichau/FileConverter](https://github.com/Tichau/FileConverter), the original File Converter project created and maintained by **Adrien Allard (Tichau)**.
+
+All credit for the original software goes to the upstream author and contributors. This fork is published under the same **GPL version 3** license, in compliance with the original project's licensing terms, and the original copyright and license are fully preserved (see [LICENSE.md](LICENSE.md)).
+
+Changes made in this fork (version 2.3):
+
+* New conversion support: Markdown (.md) to Word (.docx), powered by Markdig and DocumentFormat.OpenXml.
+* Fixed the installer payload which was missing the NetOffice libraries (Office document conversions were broken in the installed application).
+* Re-enabled local Release installer packaging (upstream private signing configuration disabled).
+
 ## Description
 
 **File Converter** is a very simple tool which allows you to convert and compress one or several file(s) using the context menu of windows explorer.

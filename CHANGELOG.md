@@ -1,5 +1,13 @@
 # Change Log
 
+## Version 2.3 (fork)
+
+- New: Markdown (.md) to Word (.docx) conversion using Markdig and DocumentFormat.OpenXml (no external dependency, no Microsoft Office required). Supports headings, emphasis, lists, code blocks, tables, quotes, thematic breaks, hyperlinks and local images.
+- New: Default "To Docx" conversion preset for .md files.
+- Fixes: Installer was not shipping the NetOffice libraries (NetOffice, OfficeApi, WordApi, ExcelApi, PowerPointApi, VBIDEApi), breaking Word/Excel/PowerPoint conversions in the installed application.
+- Tech: Update version to 2.3 and point the upgrade check to this fork's releases.
+- Tech: Disable the upstream private installer signing configuration so that Release installers can be built locally.
+
 ## Version 2.2
 
 - New: AMD AMF hardware acceleration option for MP4/MKV H.264 conversions (thanks to bharatvansh).
