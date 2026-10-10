@@ -1,0 +1,76 @@
+﻿<Application x:Class="FileConverter.Application"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:xaml="clr-namespace:Markdown.Xaml;assembly=Markdown.Xaml"
+             xmlns:valueConverters="clr-namespace:FileConverter.ValueConverters"
+             xmlns:generic="clr-namespace:FileConverter.ValueConverters.Generic"
+             xmlns:viewModels="clr-namespace:FileConverter.ViewModels"
+             xmlns:services="clr-namespace:FileConverter.Services"
+             ShutdownMode="OnLastWindowClose">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Views/Resources/Colors.xaml"/>
+                <ResourceDictionary Source="Views/Resources/CustomStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--Global View Model Locator-->
+            <viewModels:ViewModelLocator x:Key="Locator" />
+            <services:UpgradeService x:Key="Upgrade" />
+
+            <!-- Markdown style -->
+            <xaml:Markdown x:Key="Markdown">
+                <xaml:Markdown.DocumentStyle>
+                    <Style TargetType="FlowDocument">
+                        <Setter Property="FontFamily" Value="Segoe UI" />
+                        <Setter Property="TextAlignment" Value="Left" />
+                        <Setter Property="Foreground" Value="{DynamicResource Markdown_ForegroundBrush}" />
+                        <Setter Property="Background" Value="{DynamicResource Markdown_BackgroundBrush}" />
+                        <Setter Property="LineHeight" Value="9"/>
+                        <Setter Property="FontSize" Value="13" />
+                    </Style>
+                </xaml:Markdown.DocumentStyle>
+
+                <xaml:Markdown.Heading1Style>
+                    <Style TargetType="Paragraph">
+                        <Setter Property="FontSize" Value="24" />
+                        <Setter Property="Foreground" Value="{DynamicResource Markdown_Heading1ForegroundBrush}" />
+                    </Style>
+                </xaml:Markdown.Heading1Style>
+
+                <xaml:Markdown.Heading2Style>
+                    <Style TargetType="Paragraph">
+                        <Setter Property="FontSize" Value="20" />
+                        <Setter Property="Foreground" Value="{DynamicResource Markdown_Heading2ForegroundBrush}" />
+                    </Style>
+                </xaml:Markdown.Heading2Style>
+
+                <xaml:Markdown.Heading3Style>
+                    <Style TargetType="Paragraph">
+                        <Setter Property="FontSize" Value="20" />
+                        <Setter Property="Foreground" Value="{DynamicResource Markdown_Heading3ForegroundBrush}" />
+                    </Style>
+                </xaml:Markdown.Heading3Style>
+            </xaml:Markdown>
+
+            <!-- Converters -->
+            <valueConverters:ApplicationVersionToApplicationName x:Key="ApplicationVersionToApplicationName"/>
+            <generic:BoolToVisibility x:Key="BoolToVisibility"/>
+
+            <generic:ValueConverterGroup x:Key="EnumEqualsToVisibility">
+                <generic:ValueToString/>
+                <generic:EqualsConverter/>
+                <generic:BoolToVisibility/>
+            </generic:ValueConverterGroup>
+
+            <valueConverters:ConversionStateToBrush x:Key="ConversionStateToBrush" />
+            <valueConverters:ConversionJobToEstimatedRemainingDuration x:Key="ConversionJobToEstimatedRemainingDuration" />
+
+            <generic:ValueConverterGroup x:Key="ChangelogToMarkdown">
+                <valueConverters:ChangelogConverter/>
+                <xaml:TextToFlowDocumentConverter Markdown="{StaticResource Markdown}"/>
+            </generic:ValueConverterGroup>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

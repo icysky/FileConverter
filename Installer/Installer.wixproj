@@ -1,0 +1,46 @@
+﻿<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <ProductVersion>2.2.0</ProductVersion>
+    <OutputName>FileConverter-setup</OutputName> <!-- https://github.com/firegiant/HeatWaveSupport/issues/73 -->
+      <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <Target Name="CollectSuggestedVisualStudioComponentIds" />
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Heat" Version="5.0.2" />
+    <PackageReference Include="WixToolset.NetFx.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Application\FileConverterExtension\FileConverterExtension.csproj">
+      <Name>FileConverterExtension</Name>
+      <Project>{0c44ca69-42d6-4357-bdfd-83069d1aba2f}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\Application\FileConverter\FileConverter.csproj">
+      <Name>FileConverter</Name>
+      <Project>{d27a76d2-43e4-43cc-9da3-334b0b46f4e5}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <HarvestDirectory Include="..\Application\FileConverter\$(OutputPath)Languages">
+      <ComponentGroupName>Languages</ComponentGroupName>
+      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <PreprocessorVariable>var.FileConverter.TargetDir</PreprocessorVariable>
+      <SuppressRegistry>true</SuppressRegistry>
+    </HarvestDirectory>
+  </ItemGroup>
+  <!-- congigure the project to sign the installer. Comment this line to produce an unsigned installer. -->
+  <!-- The upstream signing configuration is not public; it is disabled so that local Release packaging works. -->
+  <!-- <Import Project=".\Installer.sign" Condition=" '$(Configuration)' == 'Release' " /> -->
+</Project>

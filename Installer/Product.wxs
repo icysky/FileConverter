@@ -1,0 +1,205 @@
+﻿<!-- Upgrade documentation: http://wixtoolset.org/documentation/manual/v3/howtos/updates/major_upgrade.html -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+    <Package Name="File Converter" Language="1033" Version="2.2.0" Manufacturer="Adrien Allard" UpgradeCode="e3ca717b-a897-418a-bbef-5c7e35c76e4b" InstallerVersion="500">
+        <Icon Id="icon.ico" SourceFile="..\Resources\Icons\ApplicationIcon.ico" />
+        <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+        <SetProperty Id="ARPINSTALLLOCATION" Value="[ApplicationFolder]" After="CostFinalize" />
+      
+        <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
+        
+        <Media Id="1" Cabinet="CabFile.cab" EmbedCab="yes" />
+
+        <Feature Id="Application" Title="Installer" Level="1">
+            <ComponentGroupRef Id="ProductComponents" />
+            <ComponentGroupRef Id="Languages" />
+        </Feature>
+
+        <CustomAction Id="InstallShell" ExeCommand="--register-shell-extension &quot;[INSTALLFOLDER]FileConverterExtension.dll&quot;" Execute="deferred" Return="check" Impersonate="no" FileRef="FileConverter.exe" />
+        <CustomAction Id="UninstallShell" ExeCommand="--unregister-shell-extension &quot;[INSTALLFOLDER]FileConverterExtension.dll&quot;" Execute="deferred" Return="check" Impersonate="no" FileRef="FileConverter.exe" />
+        <CustomAction Id="PostInstallInit" ExeCommand="--post-install-init" Execute="immediate" FileRef="FileConverter.exe" />
+
+        <UI>
+            <ProgressText Action="InstallFiles" Template="File: [1],  Directory: [9],  Size: [6]" Message="Copying new files" />
+            <ProgressText Action="InstallShell" Message="Register shell extension to Windows Explorer" />
+            <ProgressText Action="UninstallShell" Message="Unregister shell extension from Windows Explorer" />
+            <ProgressText Action="PostInstallInit" Message="Initialize conversion presets" />
+        </UI>
+
+        <PropertyRef Id="WIX_IS_NETFRAMEWORK_48_OR_LATER_INSTALLED" />
+        <Launch Condition="Installed OR WIX_IS_NETFRAMEWORK_48_OR_LATER_INSTALLED" Message="This application requires .NET Framework 4.8. Please install the .NET Framework then run this installer again." />
+
+        <InstallExecuteSequence>
+            <Custom Action="UninstallShell" Before="RemoveRegistryValues" Condition="(NOT UPGRADINGPRODUCTCODE) AND (REMOVE~=&quot;ALL&quot;)" />
+            <Custom Action="InstallShell" After="WriteRegistryValues" Condition="NOT Installed" />
+            <Custom Action="PostInstallInit" After="InstallFinalize" Condition="NOT Installed" />
+        </InstallExecuteSequence>
+        
+        <ui:WixUI Id="WixUI_InstallDir" />
+        <Property Id="MSIUSEREALADMINDETECTION" Value="1" />
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+        <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" Secure="yes" /> <!-- This avoid an issue where the installer detect the utilization of the extension dll in explorer and then, ask to the user to restart these applications. The restart fails. -->
+      
+        <WixVariable Id="WixUILicenseRtf" Value="License.rtf" /> 
+        <WixVariable Id="WixUIBannerBmp" Value="..\Resources\Installer\Banner.bmp" />
+        <WixVariable Id="WixUIDialogBmp" Value="..\Resources\Installer\UI.bmp" /> 
+        <WixVariable Id="WixUIExclamationIco" Value="..\Resources\Installer\ErrorIcon.ico" />
+        <WixVariable Id="WixUIInfoIco" Value="..\Resources\Installer\WarningIcon.ico" />
+        <!--<WixVariable Id="WixUINewIco" Value="Icon16x16.ico" />
+        <WixVariable Id="WixUIUpIco" Value="Icon16x16.ico" />-->
+    </Package>
+
+    <Fragment>
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="INSTALLFOLDER" Name="!(bind.Property.ProductName)" />
+        </StandardDirectory>
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Directory Id="ApplicationStartMenuShortcut" Name="File Converter" />
+        </StandardDirectory>
+    </Fragment>
+
+    <Fragment>
+        <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+            <!-- Application -->
+            <Component Guid="{EFA8CCE9-E501-4C80-AE33-710D11CC2525}">
+                <File Id="FileConverter.exe" Source="$(var.FileConverter.TargetPath)" KeyPath="yes" Checksum="yes">
+                    <Shortcut Id="ApplicationStartMenuShortcut" Directory="ApplicationStartMenuShortcut" Advertise="yes" WorkingDirectory="INSTALLFOLDER" Name="File Converter" Description="Convert and compress everything in 2 clicks!" Icon="Icon.exe">
+                        <Icon Id="Icon.exe" SourceFile="$(var.FileConverter.TargetPath)" />
+                    </Shortcut>
+                    <Shortcut Id="ApplicationSettingsStartMenuShortcut" Directory="ApplicationStartMenuShortcut" Advertise="yes" WorkingDirectory="INSTALLFOLDER" Name="File Converter Settings" Description="Configure the conversion and compression presets" Arguments="--settings" Icon="SettingsIcon.exe">
+                        <Icon Id="SettingsIcon.exe" SourceFile="$(var.FileConverter.TargetPath)" />
+                    </Shortcut>
+                </File>
+                <RemoveFolder Id="RemoveStartMenuDir" Directory="ApplicationStartMenuShortcut" On="uninstall" />
+            </Component>
+            <Component Guid="{3E003FD3-46CA-4F4F-811E-663332828229}">
+                <File Id="FileConverter.exe.config" Source="$(var.FileConverter.TargetDir)FileConverter.exe.config" KeyPath="yes" Checksum="yes" />
+            </Component>
+            
+            <!-- Extension -->
+            <Component Guid="{35B28709-C56C-4F18-9A41-4B238402EE48}">
+                <File Id="FileConverterExtension.dll" Source="$(var.FileConverterExtension.TargetDir)FileConverterExtension.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{566A73FB-427D-43C4-9ABC-92F2528F6D0A}">
+                <File Id="SharpShell.dll" Source="$(var.FileConverterExtension.TargetDir)SharpShell.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            
+            <!-- Third parties -->
+            <Component Guid="{bae11ca4-0842-46f0-b0e5-95ecc1c994fc}">
+                <File Id="CommunityToolkit.Mvvm.dll" Source="$(var.FileConverter.TargetDir)CommunityToolkit.Mvvm.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{ae4d8912-9d99-4e70-8746-e0216539fbe3}">
+                <File Id="Microsoft.Bcl.AsyncInterfaces.dll" Source="$(var.FileConverter.TargetDir)Microsoft.Bcl.AsyncInterfaces.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{7561fa78-554b-4d31-8e69-49ee5de33371}">
+                <File Id="Microsoft.Extensions.DependencyInjection.Abstractions.dll" Source="$(var.FileConverter.TargetDir)Microsoft.Extensions.DependencyInjection.Abstractions.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{301c2287-ca21-4013-82b0-5895d89216ea}">
+                <File Id="Microsoft.Extensions.DependencyInjection.dll" Source="$(var.FileConverter.TargetDir)Microsoft.Extensions.DependencyInjection.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{101923f7-d0f9-47f5-9c59-13ec5ca81b37}">
+                <File Id="Microsoft.Xaml.Behaviors.dll" Source="$(var.FileConverter.TargetDir)Microsoft.Xaml.Behaviors.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{e5a7ebe5-30ba-4ee9-be63-f1b39101dff6}">
+                <File Id="System.Buffers.dll" Source="$(var.FileConverter.TargetDir)System.Buffers.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{d9a8094d-b500-47e1-9947-8e40ce74b2c6}">
+                <File Id="System.ComponentModel.Annotations.dll" Source="$(var.FileConverter.TargetDir)System.ComponentModel.Annotations.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{652a91b4-1e9e-477d-b5ad-657320d2541e}">
+                <File Id="System.Memory.dll" Source="$(var.FileConverter.TargetDir)System.Memory.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{9cfa6823-cef6-4c5a-8f20-997ebf1527fb}">
+                <File Id="System.Numerics.Vectors.dll" Source="$(var.FileConverter.TargetDir)System.Numerics.Vectors.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{6fc047b2-4b3c-416c-bed1-a721373df2d6}">
+                <File Id="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.FileConverter.TargetDir)System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{cc317711-c6d6-42a4-8bc2-48b0f6adf6ef}">
+                <File Id="System.Threading.Tasks.Extensions.dll" Source="$(var.FileConverter.TargetDir)System.Threading.Tasks.Extensions.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+
+            <Component Guid="{24efefd7-f7ef-4f4c-95d8-e6d136581a86}">
+              <File Id="Magick.Native.dll" Source="$(var.FileConverter.TargetDir)Magick.Native-Q16-x64.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{b3326fc3-a314-41fd-a199-ba8e07c80370}">
+              <File Id="Magick.NET.Core.dll" Source="$(var.FileConverter.TargetDir)Magick.NET.Core.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{3B94F60C-29BF-4E51-AF85-C10DF19B0B2E}">
+              <File Id="Magick.NET.dll" Source="$(var.FileConverter.TargetDir)Magick.NET-Q16-AnyCPU.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+          
+            <Component Guid="{7d3f2c1e-9a48-4b5f-a6d2-0c81e3f74a12}">
+                <File Id="Markdig.dll" Source="$(var.FileConverter.TargetDir)Markdig.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{c8519a76-2b34-4f8e-9d05-77e6c1a0b3f4}">
+                <File Id="DocumentFormat.OpenXml.dll" Source="$(var.FileConverter.TargetDir)DocumentFormat.OpenXml.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{1f4a8b2c-6d57-4e19-93ab-8c02d5e76f90}">
+                <File Id="DocumentFormat.OpenXml.Framework.dll" Source="$(var.FileConverter.TargetDir)DocumentFormat.OpenXml.Framework.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+
+            <Component Guid="{BEEAAC73-C479-4080-83B1-2B1448C7378C}">
+                <File Id="ffmpeg.exe" Source="$(var.FileConverter.TargetDir)ffmpeg.exe" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{6925974E-AFE0-4833-B797-36AE33DF9D4D}">
+                <File Id="gsdll64.dll" Source="$(var.FileConverter.TargetDir)gsdll64.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{DC549AF7-6004-423E-BFE3-3508F4AC4682}">
+                <File Id="gswin64c.exe" Source="$(var.FileConverter.TargetDir)gswin64c.exe" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{12B808AB-C4E3-4B0D-B34B-0124C75B2279}">
+                <File Id="Markdown.Xaml.dll" KeyPath="yes" Source="$(var.FileConverter.TargetDir)Markdown.Xaml.dll" Checksum="yes" />
+            </Component>
+            <Component Guid="{516EDFA8-26F3-49A5-A007-02D927874999}">
+                <File Id="Ripper.dll" KeyPath="yes" Source="$(var.FileConverter.TargetDir)Ripper.dll" Checksum="yes" />
+            </Component>
+            <Component Guid="{92FE38C7-EE75-4F85-BA97-C221E132853F}">
+                <File Id="yeti.mmedia.dll" KeyPath="yes" Source="$(var.FileConverter.TargetDir)yeti.mmedia.dll" Checksum="yes" />
+            </Component>
+            <Component Guid="{6268D6C0-42D8-4487-AC4B-33C9874C9E2F}">
+                <File Id="WpfAnimatedGif.dll" KeyPath="yes" Source="$(var.FileConverter.TargetDir)WpfAnimatedGif.dll" Checksum="yes" />
+            </Component>
+
+            <!-- NetOffice -->
+            <Component Guid="{a9c2f6b1-4d38-4c57-8e0b-63f2d94c1a75}">
+                <File Id="NetOffice.dll" Source="$(var.FileConverter.TargetDir)NetOffice.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{5b07d8e3-c964-4a12-8f6d-2a91c05b7e48}">
+                <File Id="OfficeApi.dll" Source="$(var.FileConverter.TargetDir)OfficeApi.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{d12e8c4a-7f50-49bb-a3c6-94e08b1d2f63}">
+                <File Id="WordApi.dll" Source="$(var.FileConverter.TargetDir)WordApi.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{39c4a7d0-6e81-4b23-9c5f-08b6e7a41d29}">
+                <File Id="ExcelApi.dll" Source="$(var.FileConverter.TargetDir)ExcelApi.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{6a8d1b95-20c3-4f7e-92d8-c74b06f93e15}">
+                <File Id="PowerPointApi.dll" Source="$(var.FileConverter.TargetDir)PowerPointApi.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            <Component Guid="{e47b0c62-8f19-4a0d-b65c-91d3a72e8f04}">
+                <File Id="VBIDEApi.dll" Source="$(var.FileConverter.TargetDir)VBIDEApi.dll" KeyPath="yes" Checksum="yes" />
+            </Component>
+            
+            <!-- Configuration and documentation -->
+            <Component Guid="{AD58807A-2AE2-48BE-AB55-9BDE9BBE37F3}">
+                <File Id="Settings.default.xml" Source="$(var.FileConverter.ProjectDir)\Settings.default.xml" KeyPath="yes" />
+            </Component>
+            <Component Guid="{FF6ADF7B-20A1-4222-8949-DD39D315CBEC}">
+                <File Id="README.md" Source="..\README.md" KeyPath="yes" />
+            </Component>
+            <Component Guid="{FF0ACDA8-DCAB-44C9-8004-CBD58EF418F6}">
+                <File Id="CHANGELOG.md" Source="..\CHANGELOG.md" KeyPath="yes" />
+            </Component>
+            <Component Guid="{F082B788-F2C8-4D86-A43E-AB09CBE04D6A}">
+                <File Id="LICENSE.md" Source="..\LICENSE.md" KeyPath="yes" />
+            </Component>
+
+            <!-- Registry entries -->
+            <Component Id="RegistryEntries" Guid="{1862E9DC-1B37-4AFD-85BF-2E9CFFAFA9F8}">
+                <RegistryKey Root="HKCU" Key="Software\FileConverter" ForceDeleteOnUninstall="yes">
+                    <RegistryValue Name="Path" Type="string" Value="[INSTALLFOLDER]FileConverter.exe" />
+                </RegistryKey>
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+</Wix>
