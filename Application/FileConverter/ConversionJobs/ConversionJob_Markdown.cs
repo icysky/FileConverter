@@ -34,6 +34,11 @@ namespace FileConverter.ConversionJobs
         private const long MaximumImageWidthInEmu = 5943600; // ~6.5 inches.
         private const long EmuPerPixel = 9525; // 96 dpi.
 
+        private const int PageWidthInTwips = 11906; // A4 portrait width.
+        private const int PageHeightInTwips = 16838; // A4 portrait height.
+        private const int PageMarginInTwips = 1418; // 2.5 cm margins.
+        private const int UsablePageWidthInTwips = PageWidthInTwips - (2 * PageMarginInTwips); // 9070 twips.
+
         private static readonly Markdig.MarkdownPipeline markdownPipeline = new Markdig.MarkdownPipelineBuilder()
             .UseAdvancedExtensions()
             .Build();
@@ -83,10 +88,11 @@ namespace FileConverter.ConversionJobs
                     body.AppendChild(element);
                 }
 
-                // Page setup.
+                // Page setup. Orientation is stated explicitly so that the document never inherits
+                // a previous page setup from the host application (Word/WPS "last used" settings).
                 body.AppendChild(new SectionProperties(
-                    new PageSize { Width = 11906, Height = 16838 }, // A4.
-                    new PageMargin { Top = 1418, Right = 1418, Bottom = 1418, Left = 1418, Header = 709, Footer = 709, Gutter = 0 }));
+                    new PageSize { Width = PageWidthInTwips, Height = PageHeightInTwips, Orient = PageOrientationValues.Portrait }, // A4 portrait.
+                    new PageMargin { Top = PageMarginInTwips, Right = PageMarginInTwips, Bottom = PageMarginInTwips, Left = PageMarginInTwips, Header = 709, Footer = 709, Gutter = 0 }));
 
                 this.currentMainDocumentPart.Document.Save();
             }
@@ -367,9 +373,48 @@ namespace FileConverter.ConversionJobs
         {
             Table docxTable = new Table();
 
+            // Count the maximum number of grid columns (a cell can span several columns).
+            int columnCount = 1;
+            foreach (Block block in table)
+            {
+                MTableRow row = block as MTableRow;
+                if (row == null)
+                {
+                    continue;
+                }
+
+                int rowColumnCount = 0;
+                foreach (Block cellBlock in row)
+                {
+                    MTableCell cell = cellBlock as MTableCell;
+                    if (cell != null)
+                    {
+                        rowColumnCount += cell.ColumnSpan > 1 ? cell.ColumnSpan : 1;
+                    }
+                }
+
+                columnCount = Math.Max(columnCount, rowColumnCount);
+            }
+
+            // Share the usable page width between all columns, so that the table can never be
+            // wider than the page (even with many columns or long unbreakable content).
+            int columnWidth = UsablePageWidthInTwips / columnCount;
+            if (columnWidth < 1)
+            {
+                columnWidth = 1;
+            }
+
+            int lastColumnWidth = UsablePageWidthInTwips - (columnWidth * (columnCount - 1));
+            if (lastColumnWidth < 1)
+            {
+                lastColumnWidth = columnWidth;
+            }
+
+            // A fixed layout makes the host application respect the widths below instead of
+            // auto-fitting the table to its content (which used to overflow the page).
             docxTable.AppendChild(new TableProperties(
                 new TableStyle { Val = "TableGrid" },
-                new TableWidth { Width = "5000", Type = TableWidthUnitValues.Pct },
+                new TableWidth { Width = UsablePageWidthInTwips.ToString(), Type = TableWidthUnitValues.Dxa },
                 new TableBorders(
                     new TopBorder { Val = BorderValues.Single, Size = 4, Color = "BFBFBF" },
                     new LeftBorder { Val = BorderValues.Single, Size = 4, Color = "BFBFBF" },
@@ -377,24 +422,13 @@ namespace FileConverter.ConversionJobs
                     new RightBorder { Val = BorderValues.Single, Size = 4, Color = "BFBFBF" },
                     new InsideHorizontalBorder { Val = BorderValues.Single, Size = 4, Color = "BFBFBF" },
                     new InsideVerticalBorder { Val = BorderValues.Single, Size = 4, Color = "BFBFBF" }),
+                new TableLayout { Type = TableLayoutValues.Fixed },
                 new TableLook { Val = "04A0", FirstRow = true, LastRow = false, FirstColumn = true, LastColumn = false, NoHorizontalBand = false, NoVerticalBand = true }));
-
-            // Determine the column count from the first row and add the mandatory table grid.
-            int columnCount = 1;
-            foreach (Block block in table)
-            {
-                MTableRow firstRow = block as MTableRow;
-                if (firstRow != null && firstRow.Count > 0)
-                {
-                    columnCount = firstRow.Count;
-                    break;
-                }
-            }
 
             TableGrid tableGrid = new TableGrid();
             for (int index = 0; index < columnCount; index++)
             {
-                tableGrid.AppendChild(new GridColumn { Width = (9070 / columnCount).ToString() });
+                tableGrid.AppendChild(new GridColumn { Width = (index == columnCount - 1 ? lastColumnWidth : columnWidth).ToString() });
             }
 
             docxTable.AppendChild(tableGrid);
@@ -413,6 +447,7 @@ namespace FileConverter.ConversionJobs
                     docxRow.TableRowProperties = new TableRowProperties(new TableHeader());
                 }
 
+                int columnIndex = 0;
                 foreach (Block cellBlock in markdownRow)
                 {
                     MTableCell markdownCell = cellBlock as MTableCell;
@@ -421,12 +456,29 @@ namespace FileConverter.ConversionJobs
                         continue;
                     }
 
-                    TableCell cell = new TableCell();
-                    cell.TableCellProperties = new TableCellProperties(new TableCellWidth { Width = "0", Type = TableWidthUnitValues.Auto });
-                    if (markdownCell.ColumnSpan > 1)
+                    int columnSpan = markdownCell.ColumnSpan > 1 ? markdownCell.ColumnSpan : 1;
+
+                    // Cell width must match the columns it covers, otherwise a fixed layout
+                    // would squeeze or overflow the table.
+                    int cellWidth = 0;
+                    for (int index = 0; index < columnSpan && columnIndex + index < columnCount; index++)
                     {
-                        cell.TableCellProperties.AppendChild(new GridSpan { Val = markdownCell.ColumnSpan });
+                        cellWidth += columnIndex + index == columnCount - 1 ? lastColumnWidth : columnWidth;
                     }
+
+                    if (cellWidth < 1)
+                    {
+                        cellWidth = columnWidth;
+                    }
+
+                    TableCell cell = new TableCell();
+                    cell.TableCellProperties = new TableCellProperties(new TableCellWidth { Width = cellWidth.ToString(), Type = TableWidthUnitValues.Dxa });
+                    if (columnSpan > 1)
+                    {
+                        cell.TableCellProperties.AppendChild(new GridSpan { Val = columnSpan });
+                    }
+
+                    columnIndex += columnSpan;
 
                     if (markdownRow.IsHeader)
                     {
