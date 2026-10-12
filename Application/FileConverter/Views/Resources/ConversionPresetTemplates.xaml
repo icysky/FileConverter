@@ -615,6 +615,25 @@
         </Grid>
     </DataTemplate>
 
+    <DataTemplate x:Key="DocxSettingsDataTemplate" DataType="{x:Type fileConverter:ConversionPreset}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label Content="{x:Static project:Resources.PageOrientationTitle}" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right"/>
+            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                <RadioButton Content="{x:Static project:Resources.PortraitPageOrientation}" Margin="0,7,14,7"
+                             IsChecked="{Binding Settings, ConverterParameter=PageOrientation|Portrait, Converter={StaticResource ConversionSettingsEquals}, Mode=TwoWay}"/>
+                <RadioButton Content="{x:Static project:Resources.LandscapePageOrientation}" Margin="0,7,7,7"
+                             IsChecked="{Binding Settings, ConverterParameter=PageOrientation|Landscape, Converter={StaticResource ConversionSettingsEquals}, Mode=TwoWay}"/>
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
     <Style x:Key="OutputTypeSelectorStyle" TargetType="{x:Type ContentControl}">
         <Setter Property="ContentTemplate" Value="{StaticResource EmptyDataTemplate}"/>
         <Style.Triggers>
@@ -623,6 +642,9 @@
             </DataTrigger>
             <DataTrigger Binding="{Binding OutputType}" Value="Avi">
                 <Setter Property="ContentTemplate" Value="{StaticResource AviSettingsDataTemplate}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding OutputType}" Value="Docx">
+                <Setter Property="ContentTemplate" Value="{StaticResource DocxSettingsDataTemplate}"/>
             </DataTrigger>
             <DataTrigger Binding="{Binding OutputType}" Value="Flac">
                 <Setter Property="ContentTemplate" Value="{StaticResource FlacSettingsDataTemplate}"/>

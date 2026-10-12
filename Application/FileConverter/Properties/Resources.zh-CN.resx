@@ -295,6 +295,15 @@
   <data name="RecommendedBitrateRangeInBlue" xml:space="preserve">
     <value>建议蓝光比特率范围</value>
   </data>
+  <data name="PageOrientationTitle" xml:space="preserve">
+    <value>页面方向：</value>
+  </data>
+  <data name="PortraitPageOrientation" xml:space="preserve">
+    <value>纵向</value>
+  </data>
+  <data name="LandscapePageOrientation" xml:space="preserve">
+    <value>横向</value>
+  </data>
   <data name="RemoveSelectedPreset" xml:space="preserve">
     <value>删除</value>
   </data>

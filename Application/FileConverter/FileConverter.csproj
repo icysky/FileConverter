@@ -262,6 +262,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="OutputType.cs" />
+    <Compile Include="PageOrientation.cs" />
     <Compile Include="Properties\Annotations.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>

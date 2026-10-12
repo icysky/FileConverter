@@ -551,6 +551,13 @@
     <ConversionPreset Name="To Docx" OutputType="Docx" IsDefaultSettings="true">
         <InputTypes>md</InputTypes>
         <InputPostConversionAction>None</InputPostConversionAction>
+        <Settings Key="PageOrientation" Value="Portrait" />
+        <OutputFileNameTemplate>(p)(f)</OutputFileNameTemplate>
+    </ConversionPreset>
+    <ConversionPreset Name="To Docx (landscape)" OutputType="Docx" IsDefaultSettings="true">
+        <InputTypes>md</InputTypes>
+        <InputPostConversionAction>None</InputPostConversionAction>
+        <Settings Key="PageOrientation" Value="Landscape" />
         <OutputFileNameTemplate>(p)(f)</OutputFileNameTemplate>
     </ConversionPreset>
     <ConversionPreset Name="To Webp" OutputType="Webp" IsDefaultSettings="true">

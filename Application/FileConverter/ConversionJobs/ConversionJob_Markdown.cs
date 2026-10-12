@@ -31,13 +31,19 @@ namespace FileConverter.ConversionJobs
 
     public class ConversionJob_Markdown : ConversionJob
     {
-        private const long MaximumImageWidthInEmu = 5943600; // ~6.5 inches.
         private const long EmuPerPixel = 9525; // 96 dpi.
+        private const long EmuPerTwip = 635; // 1 inch = 1440 twips = 914400 EMU.
 
         private const int PageWidthInTwips = 11906; // A4 portrait width.
         private const int PageHeightInTwips = 16838; // A4 portrait height.
-        private const int PageMarginInTwips = 1418; // 2.5 cm margins.
-        private const int UsablePageWidthInTwips = PageWidthInTwips - (2 * PageMarginInTwips); // 9070 twips.
+        private const int PageMarginInTwips = 720; // 1.27 cm / 0.5 inch margins, i.e. the Word "Narrow" preset.
+        private const int HeaderFooterMarginInTwips = 709; // 1.25 cm, as in the Word "Narrow" preset.
+
+        private int pageWidthInTwips = PageWidthInTwips;
+        private int pageHeightInTwips = PageHeightInTwips;
+        private int usablePageWidthInTwips = PageWidthInTwips - (2 * PageMarginInTwips); // 10466 twips.
+        private long maximumImageWidthInEmu = (PageWidthInTwips - (2 * PageMarginInTwips)) * EmuPerTwip;
+        private PageOrientation pageOrientation = PageOrientation.Portrait;
 
         private static readonly Markdig.MarkdownPipeline markdownPipeline = new Markdig.MarkdownPipelineBuilder()
             .UseAdvancedExtensions()
@@ -67,6 +73,8 @@ namespace FileConverter.ConversionJobs
 
             MarkdigDocument document = Markdig.Markdown.Parse(markdownContent, markdownPipeline);
 
+            this.InitializePageSetup();
+
             this.currentImageId = 0;
             this.nextNumberingInstanceId = 1;
             this.orderedListNumberingIds.Clear();
@@ -91,8 +99,22 @@ namespace FileConverter.ConversionJobs
                 // Page setup. Orientation is stated explicitly so that the document never inherits
                 // a previous page setup from the host application (Word/WPS "last used" settings).
                 body.AppendChild(new SectionProperties(
-                    new PageSize { Width = PageWidthInTwips, Height = PageHeightInTwips, Orient = PageOrientationValues.Portrait }, // A4 portrait.
-                    new PageMargin { Top = PageMarginInTwips, Right = PageMarginInTwips, Bottom = PageMarginInTwips, Left = PageMarginInTwips, Header = 709, Footer = 709, Gutter = 0 }));
+                    new PageSize
+                    {
+                        Width = (UInt32Value)(uint)this.pageWidthInTwips,
+                        Height = (UInt32Value)(uint)this.pageHeightInTwips,
+                        Orient = this.pageOrientation == PageOrientation.Landscape ? PageOrientationValues.Landscape : PageOrientationValues.Portrait,
+                    },
+                    new PageMargin
+                    {
+                        Top = PageMarginInTwips,
+                        Right = PageMarginInTwips,
+                        Bottom = PageMarginInTwips,
+                        Left = PageMarginInTwips,
+                        Header = HeaderFooterMarginInTwips,
+                        Footer = HeaderFooterMarginInTwips,
+                        Gutter = 0,
+                    }));
 
                 this.currentMainDocumentPart.Document.Save();
             }
@@ -109,6 +131,36 @@ namespace FileConverter.ConversionJobs
                 get;
                 set;
             }
+        }
+
+        /// <summary>
+        /// Read the page orientation from the conversion preset and compute the page geometry
+        /// (page size, usable width for tables and maximum image width).
+        /// </summary>
+        private void InitializePageSetup()
+        {
+            this.pageOrientation = PageOrientation.Portrait;
+
+            string settingsValue = this.ConversionPreset?.GetSettingsValue(ConversionPreset.ConversionSettingKeys.PageOrientation);
+            if (!string.IsNullOrEmpty(settingsValue) &&
+                Enum.TryParse(settingsValue, true, out PageOrientation presetOrientation))
+            {
+                this.pageOrientation = presetOrientation;
+            }
+
+            if (this.pageOrientation == PageOrientation.Landscape)
+            {
+                this.pageWidthInTwips = PageHeightInTwips;
+                this.pageHeightInTwips = PageWidthInTwips;
+            }
+            else
+            {
+                this.pageWidthInTwips = PageWidthInTwips;
+                this.pageHeightInTwips = PageHeightInTwips;
+            }
+
+            this.usablePageWidthInTwips = this.pageWidthInTwips - (2 * PageMarginInTwips);
+            this.maximumImageWidthInEmu = this.usablePageWidthInTwips * EmuPerTwip;
         }
 
         private class InlineRenderingContext
@@ -398,13 +450,13 @@ namespace FileConverter.ConversionJobs
 
             // Share the usable page width between all columns, so that the table can never be
             // wider than the page (even with many columns or long unbreakable content).
-            int columnWidth = UsablePageWidthInTwips / columnCount;
+            int columnWidth = this.usablePageWidthInTwips / columnCount;
             if (columnWidth < 1)
             {
                 columnWidth = 1;
             }
 
-            int lastColumnWidth = UsablePageWidthInTwips - (columnWidth * (columnCount - 1));
+            int lastColumnWidth = this.usablePageWidthInTwips - (columnWidth * (columnCount - 1));
             if (lastColumnWidth < 1)
             {
                 lastColumnWidth = columnWidth;
@@ -414,7 +466,7 @@ namespace FileConverter.ConversionJobs
             // auto-fitting the table to its content (which used to overflow the page).
             docxTable.AppendChild(new TableProperties(
                 new TableStyle { Val = "TableGrid" },
-                new TableWidth { Width = UsablePageWidthInTwips.ToString(), Type = TableWidthUnitValues.Dxa },
+                new TableWidth { Width = this.usablePageWidthInTwips.ToString(), Type = TableWidthUnitValues.Dxa },
                 new TableBorders(
                     new TopBorder { Val = BorderValues.Single, Size = 4, Color = "BFBFBF" },
                     new LeftBorder { Val = BorderValues.Single, Size = 4, Color = "BFBFBF" },
@@ -803,10 +855,10 @@ namespace FileConverter.ConversionJobs
                 {
                     widthEmu = image.Width * EmuPerPixel;
                     heightEmu = image.Height * EmuPerPixel;
-                    if (widthEmu > MaximumImageWidthInEmu)
+                    if (widthEmu > this.maximumImageWidthInEmu)
                     {
-                        heightEmu = heightEmu * MaximumImageWidthInEmu / widthEmu;
-                        widthEmu = MaximumImageWidthInEmu;
+                        heightEmu = heightEmu * this.maximumImageWidthInEmu / widthEmu;
+                        widthEmu = this.maximumImageWidthInEmu;
                     }
                 }
 

@@ -1184,6 +1184,33 @@ namespace FileConverter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Landscape.
+        /// </summary>
+        public static string LandscapePageOrientation {
+            get {
+                return ResourceManager.GetString("LandscapePageOrientation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Page orientation :.
+        /// </summary>
+        public static string PageOrientationTitle {
+            get {
+                return ResourceManager.GetString("PageOrientationTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Portrait.
+        /// </summary>
+        public static string PortraitPageOrientation {
+            get {
+                return ResourceManager.GetString("PortraitPageOrientation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Rotate :.
         /// </summary>
         public static string Rotate {

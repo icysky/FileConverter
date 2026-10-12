@@ -295,6 +295,15 @@ use maj for uppercase version</value>
   <data name="RecommendedBitrateRangeInBlue" xml:space="preserve">
     <value>Recommended bitrate range in blue</value>
   </data>
+  <data name="PageOrientationTitle" xml:space="preserve">
+    <value>Page orientation :</value>
+  </data>
+  <data name="PortraitPageOrientation" xml:space="preserve">
+    <value>Portrait</value>
+  </data>
+  <data name="LandscapePageOrientation" xml:space="preserve">
+    <value>Landscape</value>
+  </data>
   <data name="RemoveSelectedPreset" xml:space="preserve">
     <value>Delete</value>
   </data>

@@ -549,6 +549,7 @@ namespace FileConverter
                     break;
 
                 case OutputType.Docx:
+                    this.InitializeSettingsValue(ConversionPreset.ConversionSettingKeys.PageOrientation, PageOrientation.Portrait.ToString(), true);
                     break;
 
                 default:
@@ -619,6 +620,7 @@ namespace FileConverter
             public const string VideoRotation = "VideoRotation";
             public const string VideoFramesPerSecond = "VideoFramesPerSecond";
             public const string FFMPEGCustomCommand = "FFMPEGCustomCommand";
+            public const string PageOrientation = "PageOrientation";
 
             public const string EnableAudio = "EnableAudio";
             public const string EnableVideo = "EnableVideo";
