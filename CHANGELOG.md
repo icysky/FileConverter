@@ -5,6 +5,8 @@
 - New: Markdown (.md) to Word (.docx) conversion using Markdig and DocumentFormat.OpenXml (no external dependency, no Microsoft Office required). Supports headings, emphasis, lists, code blocks, tables, quotes, thematic breaks, hyperlinks and local images.
 - New: Default "To Docx" conversion preset for .md files.
 - Fixes: Installer was not shipping the NetOffice libraries (NetOffice, OfficeApi, WordApi, ExcelApi, PowerPointApi, VBIDEApi), breaking Word/Excel/PowerPoint conversions in the installed application.
+- Fixes: Tables wider than the page (many columns or long unbreakable content) used to overflow the page in Word. Tables now use a fixed layout and share the usable page width between their columns, so they always fit the page.
+- Fixes: Page orientation is now stated explicitly (A4 portrait) in the generated document, so the output can never inherit the last used page setup of the editing application.
 - Tech: Update version to 2.3 and point the upgrade check to this fork's releases.
 - Tech: Disable the upstream private installer signing configuration so that Release installers can be built locally.
 
