@@ -18,9 +18,9 @@ namespace FileConverter.Services
     public class UpgradeService : ObservableObject, IUpgradeService
     {
 #if DEBUG
-        private const string BaseURI = "https://raw.githubusercontent.com/Tichau/FileConverter/integration/";
+        private const string BaseURI = "https://raw.githubusercontent.com/icysky/FileConverter/main/";
 #else
-        private const string BaseURI = "https://raw.githubusercontent.com/Tichau/FileConverter/master/";
+        private const string BaseURI = "https://raw.githubusercontent.com/icysky/FileConverter/main/";
 #endif
 
         [NotNull]
