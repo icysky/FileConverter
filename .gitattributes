@@ -1,0 +1,29 @@
+# Normalize line endings: text files are stored with LF in the repository.
+* text=auto
+
+*.cs       text diff=csharp
+*.xaml     text
+*.xml      text
+*.resx     text
+*.wxs      text
+*.wixproj  text eol=crlf
+*.csproj   text eol=crlf
+*.sln      text eol=crlf
+*.md       text
+*.ps1      text eol=crlf
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+*.json     text
+
+# Binary files must never be normalized.
+*.rtf      -text
+*.ico      binary
+*.png      binary
+*.gif      binary
+*.bmp      binary
+*.jpg      binary
+*.dll      binary
+*.exe      binary
+*.msi      binary
+*.snk      binary
+*.pdb      binary
