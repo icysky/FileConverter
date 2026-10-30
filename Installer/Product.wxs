@@ -1,6 +1,6 @@
 ﻿<!-- Upgrade documentation: http://wixtoolset.org/documentation/manual/v3/howtos/updates/major_upgrade.html -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-    <Package Name="File Converter (Unofficial Fork)" Language="1033" Version="2.3.0" Manufacturer="icysky" UpgradeCode="e3ca717b-a897-418a-bbef-5c7e35c76e4b" InstallerVersion="500">
+    <Package Name="File Converter" Language="1033" Version="2.3.0" Manufacturer="icysky" UpgradeCode="e3ca717b-a897-418a-bbef-5c7e35c76e4b" InstallerVersion="500">
         <Icon Id="icon.ico" SourceFile="..\Resources\Icons\ApplicationIcon.ico" />
         <Property Id="ARPPRODUCTICON" Value="icon.ico" />
 
@@ -8,8 +8,9 @@
             This package is an unofficial community fork. It is NOT published by the original
             author. The original project by Adrien Allard (Tichau) is available at
             https://github.com/Tichau/FileConverter and the original copyright/license are preserved.
+            The product name and install folder are kept identical to the original application.
         -->
-        <Property Id="ARPCOMMENTS" Value="Unofficial fork of File Converter - NOT the original author. Original File Converter by Adrien Allard (Tichau): https://github.com/Tichau/FileConverter" />
+        <Property Id="ARPCOMMENTS" Value="Unofficial fork of File Converter (community build) - NOT the original author. Original File Converter by Adrien Allard (Tichau): https://github.com/Tichau/FileConverter" />
         <Property Id="ARPHELPLINK" Value="https://github.com/icysky/FileConverter" />
         <Property Id="ARPURLINFOABOUT" Value="https://github.com/icysky/FileConverter" />
         <Property Id="ARPCONTACT" Value="https://github.com/icysky/FileConverter" />
